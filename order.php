@@ -7,129 +7,67 @@
 @include_once(__DIR__ . '/template/head.inc.php');
 
 if (guest()) {
-   if (!headers_sent()) {
-      setMessage('login-messages', 'De winkelwagen is alleen te zien indien u bent ingelogd. Log a.u.b. in...');
-      header('Location: ./login.php');
-      exit();
-   } else {
-      die('Pagina kan niet getoond worden als u niet bent ingelogd');
-   }
+    setMessage('login-messages', 'Log in om uw winkelwagen te bekijken.');
+    header('Location: login.php');
+    exit();
 }
 
-Database::query("SELECT 
-      `cart_items`.`id`, 
-      `cart_items`.`cart_id`, 
-      `cart_items`.`product_id`, 
-      `cart_items`.`amount`,
-      `cart`.`customer_id`,
-      `products`.`category_id`,
-      `products`.`name`,
-      `products`.`description`,
-      `products`.`price`,
-      `products`.`image`,
-     (`cart_items`.`amount` * `products`.`price`) AS `product_total`
-   FROM `cart_items`
-   LEFT JOIN `products` ON `products`.`id` = `cart_items`.`product_id`
-   LEFT JOIN `cart` ON `cart`.`id` = `cart_items`.`cart_id`
-   WHERE `cart`.`customer_id` = :customer_id AND `cart`.`ordered` = 0", [":customer_id" => user_id()]);
-
-$cart_items = Database::getAll();
-$cart_total_amount = 0;
-$cart_total_cost = 0.0;
-$shipping_cost = 0.0;
-
-$customer_fullname = user()->firstname . (!empty(user()->prefixes) ? " " . user()->prefixes : "") . " " . user()->lastname;
-
-foreach ($cart_items as $cart_item) {
-   $cart_total_amount += intval($cart_item->amount);
-   $cart_total_cost += floatval($cart_item->product_total);
+Database::query("
+    SELECT 
+      ci.id, ci.cart_id, ci.product_id, ci.amount,
+      p.name, p.price, p.image,
+      (ci.amount * p.price) AS product_total
+    FROM cart_items ci
+    JOIN products p ON p.id = ci.product_id
+    JOIN cart c ON c.id = ci.cart_id
+    WHERE c.customer_id = :uid
+      AND c.ordered = 0
+", [
+    ':uid' => user_id()
+]);
+$cart_items     = Database::getAll();
+$cart_total_amt = 0;
+$cart_total_val = 0.0;
+foreach ($cart_items as $ci) {
+    $cart_total_amt += $ci->amount;
+    $cart_total_val += $ci->product_total;
 }
-$order_total = $cart_total_cost + $shipping_cost;
 ?>
 
-<div class="uk-grid">
-   <!-- BEGIN: FACTUUR -->
-   <section class="uk-width-1-3">
-      <div class="uk-card-default uk-card-small uk-flex uk-flex-column uk-padding-small uk-flex-1">
-         <div class="uk-card-header">
-            <h2>Factuur</h2>
-         </div>
-         <!-- INVULLEN MET PHP -->
-         <div class="uk-card-body uk-flex uk-flex-column uk-flex-between">
-            <div class="uk-flex uk-flex-between uk-flex-center">
-               <p class="uk-width-1-2">Artikelen (<?= $cart_total_amount ?>)</p>
-               <p class="uk-width-1-2 uk-margin-remove-top uk-text-right">&euro; <?= sprintf("%.2f", $cart_total_cost) ?></p>
-            </div>
-            <div class="uk-flex uk-flex-between uk-flex-center">
-               <p class="uk-width-1-2">Verzendkosten</p>
-               <p class="uk-width-1-2 uk-margin-remove-top uk-text-right">&euro; <?= sprintf("%.2f", $shipping_cost) ?></p>
-            </div>
-         </div>
-         <div class="uk-card-footer">
-            <div class="uk-flex uk-flex-between uk-flex-center">
-               <p class="uk-width-1-2 uk-text-bold">Te betalen</p>
-               <p class="uk-width-1-2 uk-margin-remove-top uk-text-right uk-text-bold">&euro; <?= sprintf("%.2f", $order_total) ?></p>
-            </div>
-         </div>
-         <!-- EIND INVULLEN MET PHP -->
-      </div>
-   </section>
-   <!-- EINDE: FACTUUR -->
+<h1>Uw Winkelwagen</h1>
 
-   <!-- BEGIN: VERZENDADRES -->
-   <section class="uk-width-1-3">
-      <div class="uk-card-default uk-card-small uk-flex uk-flex uk-flex-column uk-flex-between uk-padding-small  uk-flex-1">
-         <div class="uk-card-header">
-            <h2>Verzendadres</h2>
-         </div>
-         <!-- ADRES INGELOGDE USER -->
-         <div class="uk-card-body uk-flex uk-flex-column uk-flex-between">
-            <p class="uk-margin-remove-vertical"><?= $customer_fullname ?></p>
-            <p class="uk-margin-remove-vertical"><?= user()->street ?> <?= user()->house_number ?><?= !empty(user()->addition) ? user()->addition : "" ?></p>
-            <p class="uk-margin-remove-vertical"><?= user()->zipcode ?> <?= user()->city ?></p>
-         </div>
-         <div class="uk-card-footer">
-            <div class="uk-flex uk-flex-1 uk-flex-middle uk-flex-center uk-margin-medium-top">
-               <button class="uk-button uk-button-default">
-                  Wijzigen
-               </button>
-            </div>
-         </div>
-      </div>
-   </section>
-   <!-- EINDE: VERZENDADRES -->
+<?php if (empty($cart_items)): ?>
+   <p>Uw winkelwagen is nog leeg.</p>
+<?php else: ?>
+   <table class="uk-table uk-table-divider">
+      <thead>
+         <tr>
+            <th>Product</th><th>Aantal</th><th>Prijs</th><th>Subtotaal</th>
+         </tr>
+      </thead>
+      <tbody>
+         <?php foreach ($cart_items as $i): ?>
+         <tr>
+            <td><?= htmlspecialchars($i->name) ?></td>
+            <td class="uk-text-center"><?= $i->amount ?></td>
+            <td class="uk-text-right">€ <?= number_format($i->price,2,',',' ') ?></td>
+            <td class="uk-text-right">€ <?= number_format($i->product_total,2,',',' ') ?></td>
+         </tr>
+         <?php endforeach; ?>
+      </tbody>
+      <tfoot>
+         <tr>
+            <td colspan="3" class="uk-text-right">Totaal</td>
+            <td class="uk-text-right">€ <?= number_format($cart_total_val,2,',',' ') ?></td>
+         </tr>
+      </tfoot>
+   </table>
 
-   <!-- BEGIN: BETALEN -->
-   <section class="uk-width-1-3">
-      <div class="uk-card-default uk-card-small uk-flex uk-flex uk-flex-column uk-flex-between uk-padding-small uk-flex-1">
-         <div class="uk-card-header">
-            <h2>Betalen</h2>
-         </div>
-         <div class="uk-card-body uk-flex uk-flex-column uk-flex-between">
-            <div class="uk-flex uk-flex-between uk-gap">
-               <img src="img/IDEAL.png" class="" alt="" title="" />
-               <select name="bank">
-                  <option>Kies uw bank</option>
-                  <option value="1">Rabobank</option>
-                  <option value="1">ASN Bank</option>
-                  <option value="1">ING Bank</option>
-                  <option value="1">Regiobank</option>
-                  <option value="1">SNS Bank</option>
-                  <option value="1">ABNAMRO Bank</option>
-               </select>
-            </div>
-         </div>
-         <div class="uk-card-footer">
-            <div class="uk-flex uk-flex-1 uk-flex-middle uk-flex-center uk-margin-medium-top">
-               <a href="order_confirm.php" class="uk-button uk-button-primary">
-                  Betalen
-               </a>
-            </div>
-         </div>
-      </div>
-   </section>
-   <!-- EINDE: BETALEN -->
-</div>
+   <div class="uk-margin">
+      <form method="POST" action="order_confirm.php">
+         <button type="submit" class="uk-button uk-button-primary">Betalen</button>
+      </form>
+   </div>
+<?php endif; ?>
 
-<?php
-@include_once(__DIR__ . '/template/foot.inc.php');
+<?php @include_once(__DIR__ . '/template/foot.inc.php'); ?>

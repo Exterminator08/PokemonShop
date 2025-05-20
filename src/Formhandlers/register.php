@@ -9,7 +9,6 @@ function redirectBack() {
     exit();
 }
 
-// Валидация
 $required = ['firstname', 'lastname', 'email', 'password', 'password_confirm'];
 
 foreach ($required as $field) {
@@ -29,7 +28,6 @@ if (!filter_var($_POST['email'], FILTER_VALIDATE_EMAIL)) {
     redirectBack();
 }
 
-// Хеширование пароля
 $data = [
     'firstname' => $_POST['firstname'],
     'lastname' => $_POST['lastname'],

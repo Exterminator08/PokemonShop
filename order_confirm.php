@@ -47,21 +47,17 @@ foreach ($cart_items as $cart_item) {
 }
 $order_total = $cart_total_cost + $shipping_cost;
 
-// Simulatie dat de order betaald is en afgerond
 Database::query("UPDATE `cart` SET `cart`.`ordered` = 1, `cart`.`updated_at` = :today WHERE `cart`.`id` = :cart_id AND `cart`.`ordered` = 0", [
    ':cart_id' => $cart_items[0]->cart_id,
    ':today' => date("Y-m-d H:i:s")
 ]);
 
-// We gaan er nu in de database een order van maken
-// Stap 1 - Order aanmaken en koppelen aan customer
 Database::query("INSERT INTO `orders`(`orders`.`customer_id`, `orders`.`order_date`) VALUES(:user_id, :order_date)",[
    ':user_id' => user_id(),
    ':order_date' => date("Y-m-d H:i:s")
 ]);
 
 $new_order_id = Database::lastInserted();
-// Stap 2 - Order items toevoegen
 foreach($cart_items as $cart_item) {
    Database::query("INSERT INTO `order_items`(
          `order_items`.`order_id`,
@@ -74,7 +70,6 @@ foreach($cart_items as $cart_item) {
       ]);
 }
 
-// Hierna zal de winkelwagen die we zien op de website leeg zijn
 ?>
 
 <div class="uk-grid">
@@ -92,7 +87,7 @@ foreach($cart_items as $cart_item) {
                </div>
                <div class="uk-card-default uk-padding-small uk-flex-column uk-flex-middle uk-flex-center">
                   <h3 class="uk-text-center">Bestelnummer</h3>
-                  <h2 class="uk-text-center">0128671</h2>
+                  <h2 class="uk-text-center" id="orderNumber">0128671</h2>
                </div>
             </div>
          </div>
@@ -147,8 +142,17 @@ foreach($cart_items as $cart_item) {
          </div>
       </div>
    </section>
-   <!-- EINDE: EINDAFREKENING -->
 </div>
+
+<script>
+    function generateOrderNumber() {
+        let randomNumber = Math.floor(Math.random() * 10000000);
+        let orderNumber = randomNumber.toString().padStart(7, '0');
+        document.getElementById('orderNumber').textContent = orderNumber;
+    }
+
+    window.onload = generateOrderNumber;
+</script>
 
 <?php
 @include_once(__DIR__ . '/template/foot.inc.php');

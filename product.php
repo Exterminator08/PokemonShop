@@ -1,6 +1,4 @@
 <?php
-// product.php
-
 @include_once(__DIR__ . '/src/Helpers/Auth.php');
 @include_once(__DIR__ . '/src/Helpers/Message.php');
 @include_once(__DIR__ . '/src/Database/Database.php');
@@ -29,8 +27,13 @@ if (!$product) {
    @include_once(__DIR__ . '/template/foot.inc.php');
    exit;
 }
-?>
 
+// Сохраняем текущий URL, чтобы потом вернуться
+$returnUrl = $_SERVER['REQUEST_URI'];
+?>
+<a href="index.php" class="uk-button uk-button-default">
+      ← Terug naar Home
+   </a>
 <h1 class="uk-heading-divider"><?= htmlspecialchars($product->name) ?></h1>
 
 <div class="uk-card uk-card-default uk-card-body uk-width-2-3@m uk-align-center">
@@ -42,15 +45,22 @@ if (!$product) {
             class="product-detail-image">
       </div>
    <?php endif; ?>
+
    <p><?= nl2br(htmlspecialchars($product->description)) ?></p>
-   <p class="product-price uk-text-large uk-text-bold uk-text-danger">€ <?= number_format($product->price, 2, ',', ' ') ?></p>
+   <p class="product-price uk-text-large uk-text-bold uk-text-danger">
+      € <?= number_format($product->price, 2, ',', ' ') ?>
+   </p>
+
    <?php if (isLoggedIn()): ?>
-      <form method="POST" action="src/Formhandlers/addtocart.php">
+      <form method="POST" action="src/Formhandlers/addtocart.php" class="uk-margin-small-bottom">
          <input type="hidden" name="product_id" value="<?= $product->id ?>">
+         <input type="hidden" name="return_url" value="<?= htmlspecialchars($returnUrl) ?>">
          <button class="uk-button uk-button-primary">In winkelwagen</button>
       </form>
    <?php else: ?>
-      <a href="login.php" class="uk-button uk-button-primary">Log in om te bestellen</a>
+      <a href="login.php" class="uk-button uk-button-primary uk-margin-small-bottom">
+         Log in om te bestellen
+      </a>
    <?php endif; ?>
 </div>
 

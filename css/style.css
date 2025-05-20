@@ -1,133 +1,180 @@
-body {
-  font-family: Arial, sans-serif;
-  background-color: #f5f5f5;
-  margin: 0;
-  padding: 20px;
-}
 
-h1 {
-  text-align: center;
-  margin-bottom: 40px;
-}
-
-.product-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 20px;
-}
-
-.product-card {
-  background-color: #fff;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  transition: transform 0.2s ease;
-}
-
-.product-card:hover {
-  transform: translateY(-5px);
-}
-
-.product-image {
-  max-height: 150px;
-  object-fit: contain;
-  margin-bottom: 15px;
-}
-
-.product-title {
-  font-size: 18px;
-  font-weight: bold;
-  margin: 10px 0 5px;
-  text-align: center;
-}
-
-.product-description {
-  font-size: 14px;
-  color: #555;
-  margin-bottom: 10px;
-  text-align: center;
-}
-
-.product-price {
-  font-size: 16px;
-  color: #e60023;
-  font-weight: bold;
-  margin-bottom: 10px;
-}
-
-.product-link {
-  background-color: #007bff;
-  color: white;
-  padding: 10px 15px;
-  text-decoration: none;
-  border-radius: 4px;
-  transition: background-color 0.2s ease;
-}
-
-.product-link:hover {
-  background-color: #0056b3;
-}
-
-.form {
-  max-width: 400px;
-  margin: 40px auto;
-  padding: 20px;
-  background: #f9f9f9;
-  border-radius: 8px;
-}
-.form input {
-  width: 100%;
-  padding: 8px;
-  margin-bottom: 10px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-}
-.form button {
-  width: 100%;
-  padding: 10px;
-  background-color: #007bff;
-  border: none;
-  color: white;
-  font-weight: bold;
-  cursor: pointer;
-}
-.form .error {
-  color: red;
-  font-size: 12px;
-  margin: -8px 0 8px;
-}
-
-/* Ограничение для мини‑картинок в списке продуктов */
-.product-image {
-  max-width: 100%; /* не шире блока */
-  max-height: 200px; /* высота не больше 200px */
-  width: auto;
-  height: auto;
-  object-fit: contain; /* сохраняет пропорции */
-  display: block;
-  margin: 0 auto;
-}
-
-/* Ограничение для большой фотографии на странице продукта */
-.product-detail-image {
-  max-width: 100%; /* не шире контейнера */
-  max-height: 400px; /* высота не больше 400px */
-  width: auto;
-  height: auto;
-  object-fit: contain; /* сохраняет пропорции */
-  display: block;
-  margin: 0 auto 20px;
-}
-
-/* Чтобы ссылка‑обёртка занимала весь блок и не было подчеркиваний */
-.product-card-link {
-  display: block;
-  color: inherit;
-  text-decoration: none;
-}
-.product-card-link:hover .uk-card {
-  transform: translateY(-4px);
-}
+   :root {
+    --bg-gradient-start: #000000;
+    --bg-gradient-end:   #121212;
+    --text-primary:      #EEEEEE;
+    --text-secondary:    #CCCCCC;
+    --accent-neon:       #FFFF00;
+    --accent-neon-light: #FFFF66;
+    --card-bg:           #181818;
+    --input-bg:          #1a1a1a;
+    --border-dark:       #333333;
+    --error-color:       #FF3333;
+  }
+  
+  body {
+    font-family: "Poppins", sans-serif;
+    background: linear-gradient(to bottom, var(--bg-gradient-start), var(--bg-gradient-end));
+    color: var(--text-secondary);
+    margin: 0;
+    padding: 20px;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    color: var(--accent-neon);
+  }
+  
+  h1 {
+    text-align: center;
+    margin-bottom: 40px;
+  }
+  
+  .product-card {
+    background-color: var(--card-bg);
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(255, 255, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  .product-card:hover {
+    transform: scale(1.03);
+    box-shadow: 0 8px 20px rgba(255, 255, 0, 0.3);
+  }
+  
+  .uk-card-media-top {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .product-image {
+    max-height: 150px;
+    object-fit: contain;
+    margin-bottom: 15px;
+  }
+  
+  .product-title {
+    font-size: 18px;
+    color: var(--text-primary);
+  }
+  
+  .product-description {
+    font-size: 14px;
+    color: var(--text-secondary);
+  }
+  
+  .product-price {
+    font-size: 16px;
+    color: var(--bg-gradient-end);
+    font-weight: bold;
+  }
+  
+  .product-link {
+    display: inline-block;
+    background-color: var(--accent-neon);
+    color: #000;
+    padding: 10px 15px;
+    border-radius: 4px;
+    text-decoration: none;
+    font-weight: bold;
+    transition: background-color 0.2s ease;
+  }
+  .product-link:hover {
+    background-color: var(--accent-neon-light);
+  }
+  
+  /* Navbar */
+  .uk-navbar-container {
+    background-color: #000;
+    border-bottom: 4px solid var(--accent-neon);
+  }
+  .uk-navbar-nav > li > a {
+    color: var(--text-secondary);
+  }
+  .uk-navbar-nav > li > a:hover {
+    background-color: var(--accent-neon);
+    color: #000 !important;
+  }
+  
+  /* Cart badge */
+  #cart_amount_indicator.uk-badge {
+    background-color: var(--accent-neon);
+    color: #000;
+    font-weight: bold;
+  }
+  
+  /* Dropdown */
+  .uk-navbar-dropdown {
+    background-color: #111;
+    border: 1px solid var(--accent-neon);
+  }
+  .uk-navbar-dropdown .uk-nav > li > a {
+    color: var(--text-secondary);
+  }
+  .uk-navbar-dropdown .uk-nav > li > a:hover {
+    background-color: var(--accent-neon);
+    color: #000;
+  }
+  
+  /* Формы */
+  .form {
+    max-width: 400px;
+    margin: 40px auto;
+    padding: 30px;
+    background-color: var(--input-bg);
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(255, 255, 0, 0.2);
+  }
+  .form h2 {
+    text-align: center;
+    margin-bottom: 20px;
+    color: var(--accent-neon);
+    font-size: 24px;
+  }
+  .form label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    font-size: 14px;
+  }
+  .form input[type="text"],
+  .form input[type="email"],
+  .form input[type="password"] {
+    width: 100%;
+    padding: 10px 12px;
+    margin-bottom: 16px;
+    background-color: var(--input-bg);
+    border: 1px solid var(--border-dark);
+    border-radius: 4px;
+    color: var(--text-primary);
+    font-size: 14px;
+    box-sizing: border-box;
+  }
+  .form input:focus {
+    outline: none;
+    border-color: var(--accent-neon);
+    box-shadow: 0 0 4px rgba(255, 255, 0, 0.5);
+  }
+  .form button {
+    width: 100%;
+    padding: 12px;
+    background-color: var(--accent-neon);
+    color: #000;
+    font-weight: bold;
+    font-size: 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+  }
+  .form button:hover {
+    background-color: var(--accent-neon-light);
+  }
+  .form .error {
+    color: var(--error-color);
+    font-size: 12px;
+    margin-top: -12px;
+    margin-bottom: 12px;
+  }
+  

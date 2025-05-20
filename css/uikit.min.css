@@ -3319,7 +3319,8 @@ ul.uk-nav-sub {
   --uk-navbar-dropbar-behind-color: dark;
 }
 .uk-navbar-container:not(.uk-navbar-transparent) {
-  background: #f8f8f8;
+  background: #FFD700;
+  color: #FFD700;
 }
 .uk-navbar-left,
 .uk-navbar-right,

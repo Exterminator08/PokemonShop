@@ -14,7 +14,6 @@ function redirectBack()
 $email = $_POST['email'] ?? '';
 $password = $_POST['password'] ?? '';
 
-// Валидация
 if (empty($email)) {
     setError('email-mandatory', 'E-mailadres is verplicht.');
     redirectBack();
@@ -24,7 +23,6 @@ if (empty($password)) {
     redirectBack();
 }
 
-// Поиск пользователя
 if (!Database::query("SELECT * FROM users WHERE email = :email", [':email' => $email])) {
     setError('credentials-error', 'Ongeldige gebruikersgegevens.');
     redirectBack();
@@ -37,7 +35,6 @@ if (!$user || !password_verify($password, $user->password)) {
     redirectBack();
 }
 
-// Авторизация
 login($user);
 setMessage('login-messages', 'Welkom terug, ' . htmlspecialchars($user->firstname) . '!');
 header("Location: ../../index.php");

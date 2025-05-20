@@ -10,8 +10,6 @@ function truncate(string $text, int $chars = 120): string
    return mb_substr($text, 0, $chars) . '...';
 }
 
-//kanker
-
 @include_once(__DIR__ . '/src/Helpers/Message.php');
 @include_once(__DIR__ . '/src/Helpers/Auth.php');
 @include_once(__DIR__ . '/src/Database/Database.php');
