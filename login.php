@@ -29,7 +29,7 @@
             <img src="img/logo4.png" class="uk-card-media uk-card-body-login-logo" alt="Webshop Het Witte Kippetje" title="Webshop Het Witte Kippetje" />
             <div class="uk-flex uk-flex-column uk-flex-middle">
                <p class="uk-text-center uk-margin-remove-bottom uk-text-muted">Webshop</p>
-               <h4 class="uk-text-uppercase uk-text-center uk-margin-remove-vertical uk-text-muted">Het Witte Kippetje</h4>
+               <h4 class="uk-text-uppercase uk-text-center uk-margin-remove-vertical uk-text-muted">Pokemon shop</h4>
             </div>
          </div>
          <div class="uk-width-2-3 uk-flex uk-flex-column">

@@ -1,5 +1,4 @@
 <?php
-date_default_timezone_set('Europe/Amsterdam');
 
 @include_once(__DIR__ . '/src/Helpers/Auth.php');
 @include_once(__DIR__ . '/src/Helpers/Message.php');
@@ -7,152 +6,126 @@ date_default_timezone_set('Europe/Amsterdam');
 
 @include_once(__DIR__ . '/template/head.inc.php');
 
-if (guest()) {
-   if (!headers_sent()) {
-      setMessage('login-messages', 'De winkelwagen is alleen te zien indien u bent ingelogd. Log a.u.b. in...');
-      header('Location: ./login.php');
-      exit();
-   } else {
-      die('Pagina kan niet getoond worden als u niet bent ingelogd');
-   }
+if ($_SERVER['REQUEST_METHOD'] !== 'POST' || guest()) {
+    setError('order-error', 'U moet ingelogd zijn om af te rekenen.');
+    header('Location: login.php');
+    exit();
 }
 
-Database::query("SELECT 
-      `cart_items`.`id`, 
-      `cart_items`.`cart_id`, 
-      `cart_items`.`product_id`, 
-      `cart_items`.`amount`,
-      `cart`.`customer_id`,
-      `products`.`category_id`,
-      `products`.`name`,
-      `products`.`description`,
-      `products`.`price`,
-      `products`.`image`,
-     (`cart_items`.`amount` * `products`.`price`) AS `product_total`
-   FROM `cart_items`
-   LEFT JOIN `products` ON `products`.`id` = `cart_items`.`product_id`
-   LEFT JOIN `cart` ON `cart`.`id` = `cart_items`.`cart_id`
-   WHERE `cart`.`customer_id` = :customer_id AND `cart`.`ordered` = 0", [":customer_id" => user_id()]);
+Database::query(
+    "SELECT id FROM cart WHERE customer_id = :uid AND ordered = 0",
+    [':uid' => user_id()]
+);
+$cart = Database::get();
+if (!$cart) {
+    setError('order-error', 'Uw winkelwagen is leeg.');
+    header('Location: order.php');
+    exit();
+}
+$cartId = $cart->id;
 
+Database::query(
+    "SELECT ci.product_id, ci.amount, p.name, p.price, p.image,
+            (ci.amount * p.price) AS product_total
+     FROM cart_items ci
+     JOIN products p ON p.id = ci.product_id
+     WHERE ci.cart_id = :cid",
+    [':cid' => $cartId]
+);
 $cart_items = Database::getAll();
-$cart_total_amount = 0;
-$cart_total_cost = 0.0;
-$shipping_cost = 0.0;
 
-$customer_fullname = user()->firstname . (!empty(user()->prefixes) ? " " . user()->prefixes : "") . " " . user()->lastname;
+Database::query(
+    "UPDATE cart
+     SET ordered    = 1,
+         updated_at = :now
+     WHERE id = :cid",
+    [
+        ':now' => date('Y-m-d H:i:s'),
+        ':cid' => $cartId
+    ]
+);
 
-foreach ($cart_items as $cart_item) {
-   $cart_total_amount += intval($cart_item->amount);
-   $cart_total_cost += floatval($cart_item->product_total);
-}
-$order_total = $cart_total_cost + $shipping_cost;
-
-Database::query("UPDATE `cart` SET `cart`.`ordered` = 1, `cart`.`updated_at` = :today WHERE `cart`.`id` = :cart_id AND `cart`.`ordered` = 0", [
-   ':cart_id' => $cart_items[0]->cart_id,
-   ':today' => date("Y-m-d H:i:s")
-]);
-
-Database::query("INSERT INTO `orders`(`orders`.`customer_id`, `orders`.`order_date`) VALUES(:user_id, :order_date)",[
-   ':user_id' => user_id(),
-   ':order_date' => date("Y-m-d H:i:s")
-]);
-
-$new_order_id = Database::lastInserted();
-foreach($cart_items as $cart_item) {
-   Database::query("INSERT INTO `order_items`(
-         `order_items`.`order_id`,
-         `order_items`.`product_id`,
-         `order_items`.`amount`)
-      VALUES(:order_id, :product_id, :amount)",[
-         ':order_id' => $new_order_id,
-         ':product_id' => $cart_item->product_id,
-         ':amount' => $cart_item->amount
-      ]);
+Database::query(
+    "INSERT INTO orders (customer_id, order_date)
+     VALUES (:uid, :odate)",
+    [
+        ':uid'   => user_id(),
+        ':odate' => date('Y-m-d H:i:s')
+    ]
+);
+$orderId = Database::lastInserted();
+foreach ($cart_items as $item) {
+    Database::query(
+        "INSERT INTO order_items (order_id, product_id, amount)
+         VALUES (:oid, :pid, :amt)",
+        [
+            ':oid' => $orderId,
+            ':pid' => $item->product_id,
+            ':amt' => $item->amount
+        ]
+    );
 }
 
+Database::query(
+    "DELETE FROM cart_items WHERE cart_id = :cid",
+    [':cid' => $cartId]
+);
+
+setMessage('order-success', 'Bedankt voor uw betaling! Uw winkelwagen is nu geleegd.');
 ?>
 
-<div class="uk-grid">
-   <!-- BEGIN: BEDANKT -->
-   <section class="uk-width-3-3 uk-flex uk-flex-column uk-cart-gap uk-margin-large-bottom">
-      <div class="uk-card-default uk-card-small uk-flex uk-flex-column uk-padding-small">
-         <div class="uk-card-header">
-            <h1>Bedankt voor uw bestelling</h1>
-         </div>
-         <div class="uk-card-body uk-flex uk-flex-column uk-flex-between">
-            <div class="uk-flex uk-flex-between uk-flex-center">
-               <div>
-                  <h4 class="uk-margin-remove">Fijn dat u voor ons gekozen heeft.</h4>
-                  <h4 class="uk-margin-remove">U ontvangt van ons binnenkort een e-mail met alle informatie over uw bestelling.</h4>
-               </div>
-               <div class="uk-card-default uk-padding-small uk-flex-column uk-flex-middle uk-flex-center">
-                  <h3 class="uk-text-center">Bestelnummer</h3>
-                  <h2 class="uk-text-center" id="orderNumber">0128671</h2>
-               </div>
-            </div>
-         </div>
-      </div>
-   </section>
-   <!-- EINDE: BEDANKT -->
+<div class="uk-grid-small uk-margin-top" uk-grid>
+  <div class="uk-width-1-1">
+    <div class="uk-card uk-card-default uk-card-body uk-text-center">
+      <h1>Bedankt voor uw bestelling</h1>
+      <p>Uw ordernummer is: <strong id="orderNumber">0000000</strong></p>
+      <p>U ontvangt binnen enkele ogenblikken een bevestiging per e-mail.</p>
+      <a href="index.php" class="uk-button uk-button-default uk-margin-top">Terug naar Home</a>
+    </div>
+  </div>
 
-   <!-- BEGIN: EINDAFREKENING -->
-   <section class="uk-width-3-3">
-      <div class="uk-card-default uk-card-small uk-flex uk-flex uk-flex-column uk-flex-between uk-padding-small">
-         <div class="uk-card-header">
-            <h2>Uw bestelling betreft</h2>
-         </div>
-         <div class="uk-card-body uk-flex uk-flex-column uk-flex-between">
-            <table class="uk-table uk-table-divider uk-width-2-2 order-confirm-table">
-               <thead>
-                  <tr>
-                     <th class="uk-width-2-3">Product</th>
-                     <th class="uk-text-center">Prijs</th>
-                     <th class="uk-text-center">Aantal</th>
-                     <th class="uk-text-right">Subtotaal</th>
-                  </tr>
-               </thead>
-               <tbody>
-                  <?php foreach($cart_items as $cart_item): ?>
-                  <tr>
-                     <td class="uk-flex uk-flex-middle uk-gap">
-                        <img class="uk-order-confirm-img" src="<?= $cart_item->image ?>" alt="" />
-                        <p class="uk-margin-remove"><?= $cart_item->name ?></p>
-                     </td>
-                     <td class="uk-text-center">&euro; <?= sprintf("%.2f", $cart_item->price) ?></td>
-                     <td class="uk-text-center"><?= $cart_item->amount ?></td>
-                     <td class="uk-text-right">&euro; <?= sprintf("%.2f", (floatval($cart_item->price) * floatval($cart_item->amount))) ?></td>
-                  </tr>
-                  <?php endforeach; ?>
-               </tbody>
-               <tfoot>
-                  <tr>
-                     <td colspan="3" class="uk-text-right uk-text-uppercase">Totaal te betalen</td>
-                     <td class="uk-text-right">&euro; <?= $order_total ?></td>
-                  </tr>
-                  <tr>
-                     <td colspan="3" class="uk-text-right uk-text-uppercase">Reeds betaald</td>
-                     <td class="uk-text-right">&euro; <?= $order_total ?></td>
-                  </tr>
-                  <tr>
-                     <td colspan="3" class="uk-text-right uk-text-uppercase uk-text-bolder">Nog te betalen</td>
-                     <td class="uk-text-right uk-text-bolder">&euro; 0.00</td>
-                  </tr>
-               </tfoot>
-            </table>
-         </div>
-      </div>
-   </section>
+  <div class="uk-width-1-1">
+    <div class="uk-card uk-card-default uk-card-body">
+      <h2>Overzicht van uw bestelling</h2>
+      <table class="uk-table uk-table-divider">
+        <thead>
+          <tr>
+            <th>Product</th>
+            <th>Aantal</th>
+            <th>Prijs</th>
+            <th>Subtotaal</th>
+          </tr>
+        </thead>
+        <tbody>
+        <?php foreach ($cart_items as $item): ?>
+          <tr>
+            <td><?= htmlspecialchars($item->name) ?></td>
+            <img class="uk-order-confirm-img" src="<?= $cart_item->image ?>" alt="" />
+
+            <td class="uk-text-center"><?= $item->amount ?></td>
+            <td class="uk-text-right">€ <?= number_format($item->price,2,',',' ') ?></td>
+            <td class="uk-text-right">€ <?= number_format($item->product_total,2,',',' ') ?></td>
+          </tr>
+        <?php endforeach; ?>
+        </tbody>
+        <tfoot>
+          <tr>
+            <td colspan="3" class="uk-text-right uk-text-bold">Totaal</td>
+            <td class="uk-text-right uk-text-bold">
+              € <?= number_format(array_reduce($cart_items, fn($sum,$i)=>$sum+$i->product_total,0),2,',',' ') ?>
+            </td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
 </div>
 
 <script>
-    function generateOrderNumber() {
-        let randomNumber = Math.floor(Math.random() * 10000000);
-        let orderNumber = randomNumber.toString().padStart(7, '0');
-        document.getElementById('orderNumber').textContent = orderNumber;
-    }
-
-    window.onload = generateOrderNumber;
+  window.onload = () => {
+    const num = Math.floor(Math.random() * 1e7).toString().padStart(7, '0');
+    document.getElementById('orderNumber').textContent = num;
+  };
 </script>
 
-<?php
-@include_once(__DIR__ . '/template/foot.inc.php');
+<?php @include_once(__DIR__ . '/template/foot.inc.php'); ?>
