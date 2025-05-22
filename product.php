@@ -28,7 +28,6 @@ if (!$product) {
    exit;
 }
 
-// Сохраняем текущий URL, чтобы потом вернуться
 $returnUrl = $_SERVER['REQUEST_URI'];
 ?>
 <a href="index.php" class="uk-button uk-button-default">

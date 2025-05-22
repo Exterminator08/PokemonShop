@@ -4,7 +4,6 @@
 
 session_start();
 
-// Выполняем выход при POST-запросе с корректным user_id
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
    if (isset($_POST['user_id']) && $_POST['user_id'] == user_id()) {
       logout();

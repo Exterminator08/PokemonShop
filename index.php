@@ -1,7 +1,5 @@
 <?php
-// index.php
 
-// Функция обрезки текста
 function truncate(string $text, int $chars = 120): string
 {
    if (mb_strlen($text) <= $chars) {
@@ -14,21 +12,17 @@ function truncate(string $text, int $chars = 120): string
 @include_once(__DIR__ . '/src/Helpers/Auth.php');
 @include_once(__DIR__ . '/src/Database/Database.php');
 
-// Подключаем шапку и навигацию
 @include_once(__DIR__ . '/template/head.inc.php');
 
 if (!Database::isConnected()) {
    die('<div class="uk-alert-danger" uk-alert><p>Database connection error: ' . Database::getLastError() . '</p></div>');
 }
 
-// Загружаем категории для фильтра
 Database::query("SELECT * FROM categories");
 $categories = Database::getAll();
 
-// Обработка GET-фильтра
 $categoryId = $_GET['category'] ?? '';
 
-// Запрос продуктов в зависимости от фильтра
 if ($categoryId) {
    Database::query("SELECT * FROM products WHERE category_id = :cat", [':cat' => $categoryId]);
 } else {
@@ -44,7 +38,6 @@ $products = Database::getAll();
    </div>
 <?php endif; ?>
 
-<!-- Форма фильтра по категориям -->
 <form method="GET" class="uk-margin-bottom">
    <div class="uk-flex uk-flex-left uk-flex-middle uk-grid-small" uk-grid>
       <div>
